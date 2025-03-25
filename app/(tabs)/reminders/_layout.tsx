@@ -1,4 +1,6 @@
 import { Stack } from 'expo-router';
+import { Bell } from 'lucide-react-native';
+import { Colors } from '@/constants/Colors';
 
 export default function RemindersLayout() {
   return (
@@ -7,6 +9,9 @@ export default function RemindersLayout() {
         name="index" 
         options={{ 
           headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Bell size={size} color={color} />
+          ),
         }} 
       />
       <Stack.Screen 

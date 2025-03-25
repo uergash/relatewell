@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
-import { Chrome as Home, Users, ChartBar as BarChart3, Settings } from 'lucide-react-native';
+import { Chrome as Home, Users, Settings, MessageCircle, Bell } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import Animated, { withTiming, useAnimatedStyle } from 'react-native-reanimated';
 
@@ -58,10 +58,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="insights"
+        name="interactions"
         options={{
-          title: 'Insights',
-          tabBarIcon: createTabIcon(BarChart3),
+          title: 'Interactions',
+          tabBarIcon: createTabIcon(MessageCircle),
+        }}
+      />
+      <Tabs.Screen
+        name="reminders"
+        options={{
+          title: 'Reminders',
+          tabBarIcon: createTabIcon(Bell),
         }}
       />
       <Tabs.Screen

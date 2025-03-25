@@ -1,4 +1,6 @@
 import { Stack } from 'expo-router';
+import { MessageCircle } from 'lucide-react-native';
+import { Colors } from '@/constants/Colors';
 
 export default function InteractionsLayout() {
   return (
@@ -7,6 +9,9 @@ export default function InteractionsLayout() {
         name="index" 
         options={{ 
           headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <MessageCircle size={size} color={color} />
+          ),
         }} 
       />
       <Stack.Screen 
