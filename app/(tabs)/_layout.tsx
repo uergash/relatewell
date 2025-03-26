@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { Chrome as Home, Users, Settings, MessageCircle, Bell } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import Animated, { withTiming, useAnimatedStyle } from 'react-native-reanimated';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const createTabIcon = (Icon: typeof Home) => {
@@ -54,21 +55,36 @@ export default function TabLayout() {
         name="contacts"
         options={{
           title: 'Contacts',
-          tabBarIcon: createTabIcon(Users),
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="users" size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="interactions"
         options={{
           title: 'Interactions',
-          tabBarIcon: createTabIcon(MessageCircle),
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="comments" size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="reminders"
         options={{
           title: 'Reminders',
-          tabBarIcon: createTabIcon(Bell),
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="bell" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="topics"
+        options={{
+          title: 'Topics',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="list" size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen

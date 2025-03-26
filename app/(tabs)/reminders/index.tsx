@@ -1,106 +1,53 @@
 import { useState, useMemo } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
-import { Plus, ChevronDown } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
 import { Screen } from '@/components/common/Screen';
 import { ReminderCard } from '@/components/reminders/ReminderCard';
+import { ReminderFilters } from '@/components/reminders/ReminderFilters';
 import { Colors } from '@/constants/Colors';
-import type { Contact, Reminder } from '@/types/models';
-
-// Temporary mock data
-const mockContacts: Contact[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    phone: '+1 (555) 123-4567',
-    email: 'sarah.chen@example.com',
-    relationshipType: 'Friend',
-    birthday: new Date(1990, 2, 15),
-    profilePicture: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    name: 'Michael Rodriguez',
-    phone: '+1 (555) 987-6543',
-    email: 'michael.r@example.com',
-    relationshipType: 'Colleague',
-    birthday: new Date(1988, 5, 22),
-    profilePicture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
-const mockReminders: Reminder[] = [
-  {
-    id: '1',
-    title: 'Birthday Celebration',
-    description: 'Remember to wish Sarah a happy birthday and send the gift',
-    type: 'birthday',
-    date: new Date(2024, 2, 15),
-    time: '09:00',
-    contactId: '1',
-    status: 'pending',
-    recurrence: 'yearly',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    title: 'Follow up on promotion',
-    description: 'Check how Sarah is doing with her new team and responsibilities',
-    type: 'follow_up',
-    date: new Date(2024, 2, 20),
-    contactId: '1',
-    status: 'pending',
-    recurrence: 'none',
-    interactionId: '1',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    title: 'Monthly check-in',
-    type: 'check_in',
-    date: new Date(2024, 3, 1),
-    contactId: '2',
-    status: 'pending',
-    recurrence: 'monthly',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
-type FilterStatus = 'all' | 'pending' | 'completed' | 'snoozed';
+import { useReminders } from '@/hooks/useReminders';
+import type { Reminder } from '@/types/models';
 
 export default function RemindersScreen() {
-  const [showCompleted, setShowCompleted] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('pending');
-  const [selectedContact, setSelectedContact] = useState<string | null>(null);
+  const { reminders, loading, error, refreshReminders } = useReminders();
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'completed' | 'snoozed'>('all');
+  const [selectedType, setSelectedType] = useState<'all' | 'birthday' | 'follow_up' | 'custom'>('all');
 
   const filteredReminders = useMemo(() => {
-    let reminders = mockReminders;
+    let filtered = reminders;
 
-    if (selectedContact) {
-      reminders = reminders.filter(r => r.contactId === selectedContact);
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(r => r.status === selectedStatus);
     }
 
-    if (filterStatus !== 'all') {
-      reminders = reminders.filter(r => r.status === filterStatus);
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(r => r.type === selectedType);
     }
 
-    return reminders.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [selectedContact, filterStatus]);
+    return filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [reminders, selectedStatus, selectedType]);
 
-  const handleComplete = (id: string) => {
-    // Handle completing reminder
-  };
+  if (loading) {
+    return (
+      <Screen>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </Screen>
+    );
+  }
 
-  const handleSnooze = (id: string) => {
-    // Handle snoozing reminder
-  };
+  if (error) {
+    return (
+      <Screen>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error loading reminders: {error.message}</Text>
+          <Text style={styles.retryText} onPress={refreshReminders}>Tap to retry</Text>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -113,42 +60,12 @@ export default function RemindersScreen() {
         />
       </View>
 
-      <View style={styles.filters}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterScroll}>
-          {(['all', 'pending', 'snoozed', 'completed'] as const).map((status) => (
-            <Pressable
-              key={status}
-              style={[
-                styles.filterChip,
-                filterStatus === status && styles.filterChipActive
-              ]}
-              onPress={() => setFilterStatus(status)}>
-              <Text style={[
-                styles.filterText,
-                filterStatus === status && styles.filterTextActive
-              ]}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        <Pressable 
-          style={styles.contactFilter}
-          onPress={() => {
-            // Handle contact filter
-          }}>
-          <Text style={styles.contactFilterText}>
-            {selectedContact 
-              ? mockContacts.find(c => c.id === selectedContact)?.name 
-              : 'All Contacts'}
-          </Text>
-          <ChevronDown size={16} color={Colors.text} />
-        </Pressable>
-      </View>
+      <ReminderFilters
+        selectedStatus={selectedStatus}
+        selectedType={selectedType}
+        onSelectStatus={setSelectedStatus}
+        onSelectType={setSelectedType}
+      />
 
       <ScrollView 
         style={styles.list}
@@ -157,9 +74,6 @@ export default function RemindersScreen() {
           <ReminderCard
             key={reminder.id}
             reminder={reminder}
-            contact={mockContacts.find(c => c.id === reminder.contactId)!}
-            onComplete={handleComplete}
-            onSnooze={handleSnooze}
           />
         ))}
       </ScrollView>
@@ -179,51 +93,28 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: Colors.text,
   },
-  filters: {
-    gap: 12,
-    marginBottom: 16,
-  },
-  filterScroll: {
-    gap: 8,
-    paddingRight: 16,
-  },
-  filterChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  filterChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  filterText: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
-    color: Colors.text,
-  },
-  filterTextActive: {
-    color: Colors.card,
-  },
-  contactFilter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  contactFilterText: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
-    color: Colors.text,
-  },
   list: {
     flex: 1,
+    marginTop: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  retryText: {
+    color: Colors.primary,
+    textDecorationLine: 'underline',
   },
 });

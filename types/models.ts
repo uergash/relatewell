@@ -30,17 +30,15 @@ export interface Interaction {
   updatedAt: Date;
 }
 
-export type TopicCategory = 'next_time' | 'conversation_starter' | 'evergreen' | 'avoid';
+export type TopicCategory = 'general' | 'family' | 'work' | 'social' | 'health';
 
 export interface Topic {
   id: string;
-  contactId: string;
-  text: string;
+  name: string;
+  description: string;
   category: TopicCategory;
-  lastDiscussed?: Date;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ConversationTopic {

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { StyleSheet, View, ScrollView, Text } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { UserPlus } from 'lucide-react-native';
 import { Screen } from '@/components/common/Screen';
@@ -7,34 +7,10 @@ import { SearchBar } from '@/components/contacts/SearchBar';
 import { GroupFilter } from '@/components/contacts/GroupFilter';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { Colors } from '@/constants/Colors';
+import { useContacts } from '@/hooks/useContacts';
 import type { Contact, Group } from '@/types/models';
 
-// Temporary mock data
-const mockContacts: Contact[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    phone: '+1 (555) 123-4567',
-    email: 'sarah.chen@example.com',
-    relationshipType: 'Friend',
-    birthday: new Date(1990, 2, 15),
-    profilePicture: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    name: 'Michael Rodriguez',
-    phone: '+1 (555) 987-6543',
-    email: 'michael.r@example.com',
-    relationshipType: 'Colleague',
-    birthday: new Date(1988, 5, 22),
-    profilePicture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
+// Temporary mock data for groups until we implement group functionality
 const mockGroups: Group[] = [
   {
     id: '1',
@@ -55,32 +31,54 @@ const mockGroups: Group[] = [
 ];
 
 export default function ContactsScreen() {
+  const { contacts, loading, error, refreshContacts } = useContacts();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   const filteredContacts = useMemo(() => {
-    let contacts = mockContacts;
+    let filtered = contacts;
 
     if (selectedGroup) {
       const group = mockGroups.find(g => g.id === selectedGroup);
-      contacts = contacts.filter(contact => group?.contacts.includes(contact.id));
+      filtered = filtered.filter(contact => group?.contacts.includes(contact.id));
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      contacts = contacts.filter(contact =>
+      filtered = filtered.filter(contact =>
         contact.name.toLowerCase().includes(query) ||
         contact.email?.toLowerCase().includes(query) ||
         contact.phone?.toLowerCase().includes(query)
       );
     }
 
-    return contacts.sort((a, b) => a.name.localeCompare(b.name));
-  }, [searchQuery, selectedGroup]);
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [contacts, searchQuery, selectedGroup]);
 
   const handleAddInteraction = (contactId: string) => {
     router.push(`/interactions/new?contactId=${contactId}`);
   };
+
+  if (loading) {
+    return (
+      <Screen>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (error) {
+    return (
+      <Screen>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error loading contacts: {error.message}</Text>
+          <Text style={styles.retryText} onPress={refreshContacts}>Tap to retry</Text>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -138,5 +136,25 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  retryText: {
+    color: Colors.primary,
+    textDecorationLine: 'underline',
   },
 });
